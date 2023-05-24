@@ -1,5 +1,5 @@
-local peds = {}
 local oxTarget = GetResourceState('ox_target') == 'started'
+nrs_peds = {}
 
 local function CreateAPed(ped)
     lib.requestModel(ped.model)
@@ -29,55 +29,12 @@ local function CreateAPed(ped)
     return spawnedped
 end
 
-local function GetPedIds()
-    local resourceName = GetInvokingResource()
-    local retval = {}
-    for _, ped in pairs(peds[resourceName]) do retval[#retval + 1] = ped.pedId end
-    return retval
-end
-
-local function GetPedIdFromName(pedName)
-    local resourceName = GetInvokingResource()
-    if peds?[resourceName]?[pedName] then return peds[resourceName][pedName].pedId end
-end
-
-local function RemovePedsByID(id)
-    local resourceName = GetInvokingResource()
-    if not peds[resourceName] then error('Could not find ped with id ' .. id) end
-    if type(id) == "table" then
-        for _, pedID in ipairs(id) do
-            RemovePedsByID(pedID)
-        end
-    end
-    local pedToDelete
-    for _, ped in pairs(peds) do
-        if ped.pedId == id then pedToDelete = ped break end
-    end
-    if not pedToDelete then error('Could not find ped with id ' .. id) end
-    if pedToDelete.pedId then DeletePed(pedToDelete.pedId) end
-    if pedToDelete.point then pedToDelete.point.remove() end
-end
-
-local function RemovePedsByName(name)
-    local resourceName = GetInvokingResource()
-    if not peds[resourceName] then error('Could not find ped with name ' .. name) end
-    if type(name) == "table" then
-        for _, pedName in ipairs(name) do
-            RemovePedsByName(pedName)
-        end
-    end
-    local pedToDelete = peds[resourceName][name]
-    if not pedToDelete then error('Could not find ped with name ' .. name) end
-    if pedToDelete.pedId then DeletePed(pedToDelete.pedId) end
-    if pedToDelete.point then pedToDelete.point.remove() end
-end
-
-local function SetupPoints(resourceName, ped, pedName)
-    if not ped.coords or not ped.model then
-        error(("Missing %s"):format(ped.coords and 'model' or 'coords'), 0)
+local function SetupPoints(pedName, pedData)
+    if not pedData.coords then
+        error("Missing ped coords", 0)
         return
     end
-    if not ped.model then
+    if not pedData.model then
         error("Missing ped model", 0)
         return
     end
@@ -85,60 +42,57 @@ local function SetupPoints(resourceName, ped, pedName)
         error("Missing ped name", 0)
         return
     end
-    peds[resourceName] = peds[resourceName] or {}
     local point = lib.points.new({
-        coords = ped.coords,
-        distance = ped.spawnRadius or 50,
+        coords = pedData.coords,
+        distance = pedData.spawnRadius or 50,
     })
+    local entityID
     function point:onEnter()
-        local success, pedId = pcall(CreateAPed, ped)
-        if not success then error(pedId) end
-        ped.pedId = pedId
+        nrs_peds[pedName].entityID = CreateAPed(pedData)
     end
     function point:onExit()
-        DeletePed(ped.pedId)
-        ped.pedId = nil
+        ped = nrs_peds[pedName]
+        DeletePed(ped.entityID)
+        ped.entityID = nil
     end
-    ped.point = point
-    peds[resourceName][pedName] = ped
+    nrs_peds[pedName] = {
+        entityID = entityID,
+        point = point,
+        remove = function ()
+            local ped = nrs_peds[pedName]
+            ped.point:remove()
+            if ped.entityID then
+                DeletePed(ped.entityID)
+            end
+            nrs_peds[pedName] = nil
+        end
+    }
 end
 
-local function SetupPeds(newPeds)
-    local resourceName = GetInvokingResource() or GetCurrentResourceName()
+function SetupPeds(newPeds)
     if not next(newPeds) then
         error('Invalid ped table', 0)
         return
     end
-    for pedName, ped in pairs(newPeds) do
-        SetupPoints(resourceName, ped, pedName)
+    for pedName, pedData in pairs(newPeds) do
+        SetupPoints(pedName, pedData)
     end
-end
-
-local function DeleteResourcePeds(resource)
-    resource = not GetInvokingResource() and resource or GetInvokingResource()
-    for _, ped in pairs(peds[resource]) do
-        if ped.pedId then DeletePed(ped.pedId) ped.pedId = nil end
-        if ped.point then ped.point:remove() end
-    end
-    peds[resource] = nil
 end
 
 AddEventHandler("onResourceStop", function(resource)
     if resource == GetCurrentResourceName() then
-        for _, table in pairs(peds) do
+        for _, table in pairs(nrs_peds) do
             for _, ped in pairs(table) do
                 if ped.pedId then DeletePed(ped.pedId) end
                 if ped.point then ped.point:remove() end
             end
         end
-        peds = nil
-    elseif peds[resource] then
-        DeleteResourcePeds(resource)
+        nrs_peds = nil
     end
 end)
 
 RegisterNetEvent("nr-pedmanager:client:RefreshPeds", function ()
-    for _, resource in pairs(peds) do
+    for _, resource in pairs(nrs_peds) do
         for _, ped in pairs(resource) do
             if ped.pedId then DeletePed(ped.pedId) end
             if ped.point.distance <= ped.spawnRadius then
@@ -151,10 +105,3 @@ end)
 CreateThread(function ()
     SetupPeds(Config.Peds)
 end)
-
-exports("SetupPeds", SetupPeds)
-exports("GetPedIdFromName", GetPedIdFromName)
-exports("GetPedIds", GetPedIds)
-exports("RemovePedsByID", RemovePedsByID)
-exports("RemovePedsByName", RemovePedsByName)
-exports("DeleteResourcePeds", DeleteResourcePeds)

@@ -4,126 +4,108 @@ nrs-pedmanager is a resource which manages the dynamic spawning and despawning o
 
 It is recomended to use this resource for more static peds (i.e. shops), rather then more dynamic peds. This is because the peds are despawned when the player is a certain distance away from the ped. This can cause issues with peds which are moving around the world.
 
-nrs-pedmanager exports 6 funtions for use in your resources
+**Setup**
 
-**SetupPeds()** adds a ped or peds to be managed and spawned when in range
-```lua
-exports['nrs-pedmanager']:SetupPeds(Config.Peds)
-```
+nrs-pedmanger is used as an 'import' resource. This means that it is not started in the server.cfg file, but is instead started by other resources which use it. To use nrs-pedmanager, you must add it to the resources which start it in the fxmanifest.lua file. You can do this by adding the following lines to the fxmanifest.lua file of the resource which will be using nrs-pedmanager.
 
-**RemovePedsByID** takes a peds entity ID, removes it from the manged list, and deletes it
 ```lua
-exports['nrs-pedmanager']:RemovePedsById({pedId1, pedId2, pedId3})
--- OR
-exports['nrs-pedmanager']:RemovePedsById(pedId1)
-```
-
-**RemovePedsByName** takes a peds name, removes it from the manged list, and deletes it
-```lua
-exports['nrs-pedmanager']:RemovePedsByName({'Name1', 'Name2', 'Name3'})
--- OR
-exports['nrs-pedmanager']:RemovePedsByName('Name')
+shared_scripts {
+    '@ox_lib/init.lua',
+    -- Your files here
+}
+client_scripts {
+    '@nrs-pedmanager/client.lua',
+    -- Your files here
+}
 ```
 
-**GetPedIdFromName** returns the entity id of a given ped if it exists
+Then, in your resource files, you can start nrs-pedmanager by calling the following function.
+
 ```lua
-local pedId = exports['nrs-pedmanager']:GetPedIdFromName('Name')
-```
-**GetPedIds** returns all the pedIds of peds from a given resource if they exist
-```lua
-local pedIds = exports['nrs-pedmanager']:GetPedIds()
+SetupPeds(pedTable)
 ```
 
-**GetPedIDs** returns the entity ids of all peds spawned from the invoking resource
+and access the peds by thier name like
 ```lua
-local pedIds = exports['nrs-pedmanager']:GetPedIDs()
+nrs_peds['PedName']
 ```
 
-**DeleteResourcePeds** deletes all peds spawned from the invoking resource
-```lua
-exports['nrs-pedmanager']:DeleteResourcePeds()
-```
+ped data has the following properties
+> entityID: The entityID of the ped, nil if not spawned
+> point: the ox_lib point associated with the ped https://overextended.github.io/docs/ox_lib/Modules/Points/Lua/Client 
+> remove: function to remove the ped, will also remove the point.
+
+You can also add peds directly to nrs-pedmanager by adding them to the Config.Peds table
 
 **Notes**
-If you want peds to start with the resource, you will want the following code
-
-```lua
-local function SpawnPeds()
-    exports['nrs-pedmanager']:SetupPeds(Config.Peds)
-end
-
-AddEventHandler('onResourceStart', function(resource)
-    if resource == 'nrs-pedmanager' then
-        SpawnPeds()
-    end
-end)
-
-CreateThread(SpawnPeds)
-```
+Do not use DeleteEntity or DeletePed to remove peds, becuase they will just respawn the next time the player enters the spawn radius. Instead use the remove function on the ped data, to remove the ped if it is spawned, and prevent it from spawning again. if you later need to spawn the ped again, you can call the SetupPeds function again.
 
 **Example Config.Peds** Use this teplate to create your peds
+
 ```lua
-Example.Peds = {
-    --Required Details
+Config.Peds = {
     ['PedName'] = {
+        --Required Details
         model = 'modelname',
         coords = vector3(x, y, z),
         -- Optional Details
-        heading = 0.0,
-        debug = true,
-        spawnRadius = 25,
-        invincible = false,
-        frozen = false,
-        blockEvents = false,
-        bScriptHostPed = false,
-        canBeTargetted = true,
+
+        -- heading = 0.0,
+        -- debug = true,
+        -- spawnRadius = 25,
+        -- invincible = false,
+        -- frozen = false,
+        -- blockEvents = false,
+        -- bScriptHostPed = false,
+        -- canBeTargetted = true,
         -- animation
-        animDict = '',
-        animName = '',
+        -- animDict = '',
+        -- animName = '',
         -- OR
         -- scenario
-        scenario = '',
-        playEnterAnim = true -- false by default, try if sencario wont play
+        -- scenario = '',
+        -- playEnterAnim = true -- false by default, try if sencario wont play
         -- ox_target
-        target = {
-            {
-                name = 'ox:option1',
-                event = 'ox_target:debug',
-                icon = 'fa-solid fa-road',
-                label = 'Option 1',
-                distance = 3
-            }
-            {
-                name = 'ox:option2',
-                event = 'ox_target:debug',
-                icon = 'fa-solid fa-road',
-                label = 'Option 2',
-                distance = 3
-            }
-        }
+        -- target = {
+        --     {
+        --         name = 'ox:option1',
+        --         event = 'ox_target:debug',
+        --         icon = 'fa-solid fa-road',
+        --         label = 'Option 1',
+        --         distance = 3
+        --     },
+        --     {
+        --         name = 'ox:option2',
+        --         event = 'ox_target:debug',
+        --         icon = 'fa-solid fa-road',
+        --         label = 'Option 2',
+        --         distance = 3
+        --     }
+        -- }
         -- OR
         -- qb-target
-        target = {
-            options = {
-                {
-                    icon = 'fas fa-dollar-sign',
-                    label = 'Option 1',
-                    event = 'example'
-                },
-                 {
-                    icon = 'fas fa-dollar-sign',
-                    label = 'Option 2',
-                    event = 'example'
-                }
-            },
-            distance = 3
-        },
+        -- target = {
+        --     options = {
+        --         {
+        --             icon = 'fas fa-dollar-sign',
+        --             label = 'Option 1',
+        --             event = 'example'
+        --         },
+        --          {
+        --             icon = 'fas fa-dollar-sign',
+        --             label = 'Option 2',
+        --             event = 'example'
+        --         }
+        --     },
+        --     distance = 3
+        -- },
         -- Anything else you need for the resource here, this wont be used by pedmanager
-        blip = {
-            label = 'BlipName',
-            sprite = 628,
-            color = 3
-        }
+
+        -- blip = {
+        --     label = 'BlipName',
+        --     sprite = 628,
+        --     color = 3
+        -- }
     }
 }
 ```
