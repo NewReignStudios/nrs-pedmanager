@@ -31,9 +31,9 @@ nrs_peds['PedName']
 ```
 
 `ped data` has the following properties  
-> **entityID**: The entityID of the ped, nil if not spawned  
-> **point**: The ox_lib point associated with the ped, see https://overextended.github.io/docs/ox_lib/Modules/Points/Lua/Client  
-> **remove**: Function to remove the ped, will also remove the point.  
+- **entityID**: The entityID of the ped, nil if not spawned  
+- **point**: The ox_lib point associated with the ped, see https://overextended.github.io/docs/ox_lib/Modules/Points/Lua/Client  
+- **remove**: Function to remove the ped, will also remove the point.  
 
 You can also add peds directly to nrs-pedmanager by adding them to the Config.Peds table
 
