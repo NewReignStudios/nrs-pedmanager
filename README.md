@@ -1,12 +1,12 @@
-**nrs-pedmanager Overview**
+# **nrs-pedmanager Overview**
 
 nrs-pedmanager is a resource which manages the dynamic spawning and despawning of local peds. It handles the spawning and despawning of peds based on the players distance from the ped. It also handles the despawning of peds when the resource which spawned them is stopped. It also handles a number of common natives called on peds.
 
 It is recomended to use this resource for more static peds (i.e. shops), rather then more dynamic peds. This is because the peds are despawned when the player is a certain distance away from the ped. This can cause issues with peds which are moving around the world.
 
-**Setup**
+## **Setup**
 
-nrs-pedmanger is used as an 'import' resource. This means that it is not started in the server.cfg file, but is instead started by other resources which use it. To use nrs-pedmanager, you must add it to the resources which start it in the fxmanifest.lua file. You can do this by adding the following lines to the fxmanifest.lua file of the resource which will be using nrs-pedmanager.
+nrs-pedmanger is used as an 'import' resource. This means that it is not started in the server.cfg file, but is instead started by other resources which use it. To use nrs-pedmanager, you must add it to the resources which start it in the fxmanifest.lua file. You can do this by adding the following lines to the `fxmanifest.lua` file of the resource which will be utilizing nrs-pedmanager.
 
 ```lua
 shared_scripts {
@@ -30,17 +30,18 @@ and access the peds by thier name like
 nrs_peds['PedName']
 ```
 
-ped data has the following properties
-> entityID: The entityID of the ped, nil if not spawned
-> point: the ox_lib point associated with the ped https://overextended.github.io/docs/ox_lib/Modules/Points/Lua/Client 
-> remove: function to remove the ped, will also remove the point.
+`ped data` has the following properties  
+- **entityID**: The entityID of the ped, nil if not spawned  
+- **point**: The ox_lib point associated with the ped, see https://overextended.github.io/docs/ox_lib/Modules/Points/Lua/Client  
+- **remove**: Function to remove the ped, will also remove the point.  
 
 You can also add peds directly to nrs-pedmanager by adding them to the Config.Peds table
 
-**Notes**
-Do not use DeleteEntity or DeletePed to remove peds, becuase they will just respawn the next time the player enters the spawn radius. Instead use the remove function on the ped data, to remove the ped if it is spawned, and prevent it from spawning again. if you later need to spawn the ped again, you can call the SetupPeds function again.
+## **Notes**
+Do not use DeleteEntity or DeletePed to remove peds, becuase they will just respawn the next time the player enters the spawn radius. Instead use the remove function on the ped data to remove the ped if it is spawned and prevent it from spawning again. If you later need to spawn the ped again, call the SetupPeds function again.
 
-**Example Config.Peds** Use this teplate to create your peds
+### **Example Config.Peds** 
+*Use this teplate to create your peds*
 
 ```lua
 Config.Peds = {
