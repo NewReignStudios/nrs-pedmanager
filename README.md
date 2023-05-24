@@ -27,10 +27,10 @@ SetupPeds(pedTable)
 
 and access the peds by thier name like
 ```lua
-nrs_peds['PedName']
+nrs_peds['PedName'].entityID
 ```
 
-`ped data` has the following properties  
+ped data has the following properties  
 - **entityID**: The entityID of the ped, nil if not spawned  
 - **point**: The ox_lib point associated with the ped, see https://overextended.github.io/docs/ox_lib/Modules/Points/Lua/Client  
 - **remove**: Function to remove the ped, will also remove the point.  
