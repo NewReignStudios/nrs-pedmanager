@@ -6,7 +6,7 @@ It is recomended to use this resource for more static peds (i.e. shops), rather 
 
 ## **Setup**
 
-nrs-pedmanger is used as an 'import' resource. This means that it is not started in the server.cfg file, but is instead started by other resources which use it. To use nrs-pedmanager, you must add it to the resources which start it in the fxmanifest.lua file. You can do this by adding the following lines to the `fxmanifest.lua` file of the resource which will be utilizing nrs-pedmanager.
+nrs-pedmanger is used as an 'import' resource. This means that it is started by other resources which use it. To use nrs-pedmanager, you must add it to the resources which start it in the fxmanifest.lua file. You can do this by adding the following lines to the `fxmanifest.lua` file of the resource which will be utilizing nrs-pedmanager.
 
 ```lua
 shared_scripts {
